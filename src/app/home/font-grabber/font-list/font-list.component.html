@@ -1,1 +1,3 @@
-<p *ngFor="let font of fonts">{{font.name}} - {{font.url}}</p>
+<div>
+    <app-font-item *ngFor="let font of fonts" [font]="font"></app-font-item>
+</div>

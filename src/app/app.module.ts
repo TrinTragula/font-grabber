@@ -9,6 +9,7 @@ import { MenuComponent } from './menu/menu.component';
 import { FormsModule } from '@angular/forms';
 import { FontGrabberComponent } from './home/font-grabber/font-grabber.component';
 import { FontListComponent } from './home/font-grabber/font-list/font-list.component';
+import { FontItemComponent } from './home/font-grabber/font-list/font-item/font-item.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { FontListComponent } from './home/font-grabber/font-list/font-list.compo
     PageNotFoundComponent,
     MenuComponent,
     FontGrabberComponent,
-    FontListComponent
+    FontListComponent,
+    FontItemComponent
   ],
   imports: [
     BrowserModule,
