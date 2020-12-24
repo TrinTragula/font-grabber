@@ -14,7 +14,6 @@ export class FontListComponent implements OnInit {
 
   ngOnInit(): void {
     this.fontSvc.resolvedFonts.subscribe((fonts) => {
-      console.log(fonts);
       this.fonts = fonts;
     });
   }
