@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
-const FontFaceObserver = require('fontfaceobserver');
+import * as FontFaceObserver from 'fontfaceobserver';
 
 @Component({
   selector: 'app-font-item',
