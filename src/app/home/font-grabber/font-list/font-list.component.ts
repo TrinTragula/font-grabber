@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FontResolverService } from 'src/app/services/font-resolver.service';
 import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
@@ -8,14 +9,19 @@ import { ResolvedFont } from 'src/app/shared/ResolvedFont';
   templateUrl: './font-list.component.html',
   styleUrls: ['./font-list.component.css']
 })
-export class FontListComponent implements OnInit {
+export class FontListComponent implements OnInit, OnDestroy {
+  private subscription!: Subscription;
   fonts: ResolvedFont[] = [];
 
   constructor(private resFontSvc: ResolvedFontsService) { }
 
   ngOnInit(): void {
-    this.resFontSvc.fonts.subscribe((newFontsList) => {
+    this.subscription = this.resFontSvc.fonts.subscribe((newFontsList) => {
       this.fonts = newFontsList;
     })
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }
