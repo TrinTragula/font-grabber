@@ -8,8 +8,11 @@
     <p *ngIf="resolvedFont.family">
         <b>Family</b>: {{resolvedFont.family}} ({{resolvedFont.subFamily}})
     </p>
-    <div [style]="fontStyle()">
+    <div *ngIf="showSampleText; else fontNotLoaded" [style]="fontStyle()">
         {{sampleText || 'The quick brown fox jumps over the lazy dog'}}
     </div>
+    <ng-template #fontNotLoaded>
+        <h3>Font not loaded</h3>
+    </ng-template>
     <hr>
 </div>

@@ -5,7 +5,7 @@ import { ResolvedFont } from '../shared/ResolvedFont';
 import { load as openTypeFontLoad } from 'opentype.js';
 
 const FILES_REGEX: RegExp = /(?:https?\:\/\/)?(?:[A-Za-z0-9\-]+\.)*(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
-const GOOGLE_FONTS_REGEX: RegExp = /http(s)?\:\/\/fonts\.googleapis\.com\/css[^"']*/gim;
+const GOOGLE_FONTS_REGEX: RegExp = /http(s)?\:\/\/fonts\.googleapis\.com\/css[^"'\(\)]*/gim;
 const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
 const OPENTYPE_SUPPORTED_EXTENSIONS: string[] = ['ttf', 'otf', 'woff'];
 const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js', 'html'];
@@ -14,7 +14,7 @@ const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js', 'html'];
   providedIn: 'root'
 })
 export class FontResolverService {
-  private base_url = 'https://cors-anywhere.herokuapp.com/'
+  private base_url = 'https://api.allorigins.win/raw?url=' // 'https://cors-anywhere.herokuapp.com/'
   private alreadyDone: string[] = [];
   private resolvedFontsInternal: string[] = [];
   private stop: boolean = false;
@@ -49,7 +49,7 @@ export class FontResolverService {
 
     if (this.stop) return; // Process was stopped
     if (this.alreadyDone.includes(url)) return;
-    if (depth > 3) return; // Don't venture too deep
+    if (depth > 2) return; // Don't venture too deep
 
     try {
       console.log("Fetching: ", url);
