@@ -10,6 +10,7 @@ import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
 export class FontGrabberComponent implements OnInit {
   url: string | null = null;
   errorMessage: string | null = null;
+  loading: boolean = false;
 
   constructor(private fontSvc: FontResolverService, private resolvedFontSvc: ResolvedFontsService) { }
 
@@ -19,13 +20,16 @@ export class FontGrabberComponent implements OnInit {
 
   async getFonts() {
     this.errorMessage = null;
+    this.loading = true;
     this.resolvedFontSvc.clear();
-    
+
     if (this.url && this.isValidHttpUrl(this.url)) {
       this.errorMessage = await this.fontSvc.resolve(this.url);
     } else {
       this.errorMessage = 'Please provide a valid URL';
     }
+
+    this.loading = false;
   }
 
   /**

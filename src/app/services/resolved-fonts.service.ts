@@ -7,23 +7,24 @@ import { FontResolverService } from './font-resolver.service';
   providedIn: 'root'
 })
 export class ResolvedFontsService {
-  private resolvedFonts: ResolvedFont[] = []
-  private observableResolvedFonts = new BehaviorSubject<ResolvedFont[]>([]);
+  private resolvedFonts: ResolvedFont[] | null = null;
+  private observableResolvedFonts = new BehaviorSubject<ResolvedFont[] | null>(null);
 
   constructor(private fontSvc: FontResolverService) {
     this.fontSvc.resolvedFont.subscribe((font) => {
+      if (!this.resolvedFonts) this.resolvedFonts = [];
       this.resolvedFonts.push(font);
       this.observableResolvedFonts.next(this.resolvedFonts);
     });
   }
 
   clear() {
-    this.resolvedFonts = [];
+    this.resolvedFonts = null;
     this.observableResolvedFonts.next(this.resolvedFonts);
   }
 
-  get fonts(): Observable<ResolvedFont[]> {
-    return this.observableResolvedFonts.asObservable()
+  get fonts(): Observable<ResolvedFont[] | null> {
+    return this.observableResolvedFonts.asObservable();
   }
 
 }

@@ -1,6 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
-import { load as openTypeFontLoad } from 'opentype.js';
 
 @Component({
   selector: 'app-font-item',
@@ -8,7 +7,7 @@ import { load as openTypeFontLoad } from 'opentype.js';
   styleUrls: ['./font-item.component.css']
 })
 export class FontItemComponent implements OnInit, AfterViewInit {
-  @Input() font!: ResolvedFont;
+  @Input("font") resolvedFont!: ResolvedFont;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
 
   constructor() { }
@@ -18,18 +17,9 @@ export class FontItemComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    const url = this.font.url.startsWith('http')
-      ? 'https://cors-anywhere.herokuapp.com/' + this.font.url
-      : 'https://cors-anywhere.herokuapp.com/' + 'http://' + this.font.url;
-
-    try {
-      this.fixCanvas();
-      const font = await openTypeFontLoad(url);
-      const ctx = this.canvas.nativeElement.getContext('2d');
-      font.draw(ctx!, 'The quick brown fox jumps over the lazy dog', 0, 32, 33);
-    } catch (err) {
-      console.log('Font could not be loaded: ' + err);
-    }
+    this.fixCanvas();
+    const ctx = this.canvas.nativeElement.getContext('2d');
+    this.resolvedFont.font.draw(ctx!, 'The quick brown fox jumps over the lazy dog', 0, 32, 33);
   }
 
   fixCanvas() {

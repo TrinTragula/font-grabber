@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ResolvedFont } from '../shared/ResolvedFont';
 
+import { load as openTypeFontLoad } from 'opentype.js';
 
-const FILES_REGEX: RegExp = /(?:https?\:\/\/){0,1}(?:[A-Za-z0-9\-]+\.)+(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
+const FILES_REGEX: RegExp = /(?:https?\:\/\/){0,1}(?:[A-Za-z0-9\-]+\.)*(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
 const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff']; //, 'woff2', 'eot'];
 const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js'];
 
@@ -13,7 +14,7 @@ const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js'];
 export class FontResolverService {
   private base_url = 'https://cors-anywhere.herokuapp.com/'
   private alreadyDone: string[] = [];
-  private resolvedFontsInternal: ResolvedFont[] = [];
+  private resolvedFontsInternal: string[] = [];
   resolvedFont: Subject<ResolvedFont> = new Subject<ResolvedFont>();
 
   constructor() { }
@@ -27,7 +28,6 @@ export class FontResolverService {
     this.alreadyDone = [];
     this.resolvedFontsInternal = [];
     await this.extractFonts(url);
-    console.log('DONE');
 
     return null;
   }
@@ -41,8 +41,6 @@ export class FontResolverService {
 
     if (this.alreadyDone.includes(url)) return;
 
-    console.log('Fetching:', url);
-
     try {
       const response = await fetch(this.base_url + url);
       const text = await response.text();
@@ -52,28 +50,49 @@ export class FontResolverService {
       do {
         regexResult = FILES_REGEX.exec(text);
         if (regexResult && regexResult.length >= 3) {
-          const url = regexResult[0];
+          const newUrl = (new URL(regexResult[0], url)).href;
           const extension = regexResult[2].toLowerCase();
 
           if (FONT_EXTENSIONS.includes(extension)) {
             // Don't add it again if it already exists
-            if (!this.resolvedFontsInternal.find(f => f.url === url)) {
-              var font = new ResolvedFont(
-                url,
-                regexResult[1],
-                extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot'
-              );
-              this.resolvedFontsInternal.push(font);
-              this.resolvedFont.next(font);
+            if (!this.resolvedFontsInternal.find(u => u === newUrl)) {
+              this.resolvedFontsInternal.push(newUrl);
+              this.tryAddFont(newUrl, extension);
             }
           } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
-            await this.extractFonts(url);
+            await this.extractFonts(newUrl);
           }
         }
       } while (regexResult);
     } catch {
-      console.log("Errore");
+
     }
     return;
+  }
+
+  private async tryAddFont(url: string, extension: string) {
+    console.log(url);
+    const proxied_url = this.base_url + url;
+
+    try {
+      const font = await openTypeFontLoad(proxied_url);
+
+      if (font?.names?.fontFamily) {
+        const resolvedFont = new ResolvedFont(
+          url,
+          font.names.fullName ? font.names.fullName["en"] : '',
+          extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot',
+          font,
+          font.names.fontFamily ? font.names.fontFamily["en"] : '',
+          font.names.fontSubfamily ? font.names.fontSubfamily["en"] : '',
+          font.names.version ? font.names.version["en"] : '',
+          font.names.licenseURL ? font.names.licenseURL["en"] : ''
+        );
+
+        this.resolvedFont.next(resolvedFont);
+      }
+    } catch (err) {
+
+    }
   }
 }

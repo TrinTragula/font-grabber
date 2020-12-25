@@ -1,3 +1,4 @@
 <div>
+    <h2 *ngIf="fonts">Found {{fonts?.length}} fonts.</h2>
     <app-font-item *ngFor="let font of fonts" [font]="font"></app-font-item>
 </div>

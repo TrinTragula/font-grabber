@@ -1,4 +1,13 @@
-<p>
-    <a [href]="font.url">{{font.name}}</a> - {{font.extension}}
-</p>
-<canvas #canvas width="940" height="50" class="text"></canvas>
+<div>
+    <p>
+        <b>Name</b>: {{resolvedFont.name}} - <a [href]="resolvedFont.url">Download</a>
+    </p>
+    <p>
+        <b>Extension</b>: {{resolvedFont.extension}}
+    </p>
+    <p>
+        <b>Family</b>: {{resolvedFont.family}} ({{resolvedFont.subFamily}})
+    </p>
+    <canvas #canvas width="940" height="50" class="text"></canvas>
+    <hr>
+</div>

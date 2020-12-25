@@ -1,5 +1,5 @@
 <input type="url" name="url" id="url" placeholder="https://example.com" size="30" required [(ngModel)]="url">
 <button (click)="getFonts()">Get fonts</button>
-<h3>{{url}}</h3>
 <h3>{{errorMessage}}</h3>
+<h3 *ngIf="loading">Loading...</h3>
 <app-font-list></app-font-list>
