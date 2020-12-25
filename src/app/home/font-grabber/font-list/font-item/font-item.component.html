@@ -5,9 +5,11 @@
     <p>
         <b>Extension</b>: {{resolvedFont.extension}}
     </p>
-    <p>
+    <p *ngIf="resolvedFont.family">
         <b>Family</b>: {{resolvedFont.family}} ({{resolvedFont.subFamily}})
     </p>
-    <canvas #canvas width="940" height="50" class="text"></canvas>
+    <div [style]="fontStyle()">
+        {{sampleText || 'The quick brown fox jumps over the lazy dog'}}
+    </div>
     <hr>
 </div>

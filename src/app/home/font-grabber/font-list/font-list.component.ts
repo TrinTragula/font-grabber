@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
@@ -9,8 +9,10 @@ import { ResolvedFont } from 'src/app/shared/ResolvedFont';
   styleUrls: ['./font-list.component.css']
 })
 export class FontListComponent implements OnInit, OnDestroy {
-  private subscription!: Subscription;
+  @Input() sampleText: string = 'The quick brown fox jumps over the lazy dog';
   fonts: ResolvedFont[] | null = null;
+  
+  private subscription!: Subscription;
 
   constructor(private resFontSvc: ResolvedFontsService) { }
 

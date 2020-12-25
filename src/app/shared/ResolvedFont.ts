@@ -5,10 +5,10 @@ export class ResolvedFont {
         public url: string,
         public name: string,
         public extension: 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot',
-        public font: Font,
-        public family: string,
-        public subFamily: string,
-        public version: string,
-        public licenseURL: string,
+        public font: Font | null,
+        public family: string | null,
+        public subFamily: string | null,
+        public version: string | null,
+        public licenseURL: string | null,
     ) { }
 }

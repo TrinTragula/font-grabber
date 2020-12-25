@@ -4,9 +4,11 @@ import { ResolvedFont } from '../shared/ResolvedFont';
 
 import { load as openTypeFontLoad } from 'opentype.js';
 
-const FILES_REGEX: RegExp = /(?:https?\:\/\/){0,1}(?:[A-Za-z0-9\-]+\.)*(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
-const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff']; //, 'woff2', 'eot'];
-const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js'];
+const FILES_REGEX: RegExp = /(?:https?\:\/\/)?(?:[A-Za-z0-9\-]+\.)*(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
+const GOOGLE_FONTS_REGEX: RegExp = /http(s)?\:\/\/fonts\.googleapis\.com\/css[^"']*/gim;
+const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
+const OPENTYPE_SUPPORTED_EXTENSIONS: string[] = ['ttf', 'otf', 'woff'];
+const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js', 'html'];
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +60,8 @@ export class FontResolverService {
 
       let regexResult = null;
       let promises: Promise<void>[] = [];
+
+      // Files
       do {
         regexResult = FILES_REGEX.exec(text);
         if (regexResult && regexResult.length >= 3) {
@@ -68,13 +72,23 @@ export class FontResolverService {
             // Don't add it again if it already exists
             if (!this.resolvedFontsInternal.find(u => u === newUrl)) {
               this.resolvedFontsInternal.push(newUrl);
-              this.tryAddFont(newUrl, extension);
+              this.tryAddFont(newUrl, regexResult[1], extension);
             }
           } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
             promises.push(this.extractFonts(newUrl, depth + 1));
           }
         }
       } while (regexResult);
+
+      // Google fonts
+      do {
+        regexResult = GOOGLE_FONTS_REGEX.exec(text);
+        if (regexResult) {
+          const newUrl = (new URL(regexResult[0], url)).href;
+          promises.push(this.extractFonts(newUrl, depth + 1));
+        }
+      } while (regexResult);
+
 
       return Promise.all(promises);
     } catch {
@@ -84,23 +98,39 @@ export class FontResolverService {
     return;
   }
 
-  private async tryAddFont(url: string, extension: string) {
+  private async tryAddFont(url: string, fallbackName: string, extension: string) {
     if (this.stop) return;
     const proxied_url = this.base_url + url;
 
     try {
-      const font = await openTypeFontLoad(proxied_url);
+      if (OPENTYPE_SUPPORTED_EXTENSIONS.includes(extension)) {
+        const font = await openTypeFontLoad(proxied_url);
 
-      if (font?.names?.fontFamily) {
+        if (font?.names?.fontFamily) {
+          const resolvedFont = new ResolvedFont(
+            url,
+            font.names.fullName ? font.names.fullName["en"] : fallbackName,
+            extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot',
+            font,
+            font.names.fontFamily ? font.names.fontFamily["en"] : null,
+            font.names.fontSubfamily ? font.names.fontSubfamily["en"] : null,
+            font.names.version ? font.names.version["en"] : null,
+            font.names.licenseURL ? font.names.licenseURL["en"] : null
+          );
+
+          this.resolvedFont.next(resolvedFont);
+        }
+
+      } else {
         const resolvedFont = new ResolvedFont(
           url,
-          font.names.fullName ? font.names.fullName["en"] : '',
+          fallbackName,
           extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot',
-          font,
-          font.names.fontFamily ? font.names.fontFamily["en"] : '',
-          font.names.fontSubfamily ? font.names.fontSubfamily["en"] : '',
-          font.names.version ? font.names.version["en"] : '',
-          font.names.licenseURL ? font.names.licenseURL["en"] : ''
+          null,
+          null,
+          null,
+          null,
+          null,
         );
 
         this.resolvedFont.next(resolvedFont);

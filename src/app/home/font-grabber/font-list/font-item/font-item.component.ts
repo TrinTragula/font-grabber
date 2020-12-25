@@ -9,29 +9,28 @@ import { ResolvedFont } from 'src/app/shared/ResolvedFont';
 export class FontItemComponent implements OnInit, AfterViewInit {
   @Input("font") resolvedFont!: ResolvedFont;
   @ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
+  @Input() sampleText: string = 'The quick brown fox jumps over the lazy dog'
+  private fontName: string = '';
 
   constructor() { }
 
   ngOnInit() {
+    this.fontName = this.resolvedFont.name + Math.floor(Math.random() * 100000);
+  }
 
+  fontStyle() {
+    return `font-family: '${this.fontName}', Fallback, sans-serif; font-size: 33px;`;
   }
 
   async ngAfterViewInit(): Promise<void> {
-    this.fixCanvas();
-    const ctx = this.canvas.nativeElement.getContext('2d');
-    this.resolvedFont.font.draw(ctx!, 'The quick brown fox jumps over the lazy dog', 0, 32, 33);
-  }
-
-  fixCanvas() {
-    var pixelRatio = window.devicePixelRatio || 1;
-    if (pixelRatio === 1) return;
-    var oldWidth = this.canvas.nativeElement.width;
-    var oldHeight = this.canvas.nativeElement.height;
-    this.canvas.nativeElement.width = oldWidth * pixelRatio;
-    this.canvas.nativeElement.height = oldHeight * pixelRatio;
-    this.canvas.nativeElement.style.width = oldWidth + 'px';
-    this.canvas.nativeElement.style.height = oldHeight + 'px';
-    this.canvas.nativeElement.getContext('2d')!.scale(pixelRatio, pixelRatio);
+    let style = document.createElement('style');
+    style.innerText = `
+      @font-face {
+        font-family: '${this.fontName}';
+        src: url('${this.resolvedFont.url}');
+      };
+    `;
+    document.head.appendChild(style);
   }
 
 }

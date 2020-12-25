@@ -1,4 +1,8 @@
 <div>
     <h2 *ngIf="fonts">Found {{fonts?.length}} fonts.</h2>
-    <app-font-item *ngFor="let font of fonts" [font]="font"></app-font-item>
+    <hr>
+    <label for="sampleText">Testo di prova</label>
+    <input [(ngModel)]="sampleText" id="sampleText" style="display: block; width: 300px; margin: 10px;">
+    <hr>
+    <app-font-item *ngFor="let font of fonts" [font]="font" [sampleText]="sampleText"></app-font-item>
 </div>
