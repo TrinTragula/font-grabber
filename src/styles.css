@@ -1,3 +1,8 @@
+body {
+    font-family: system-ui;
+    color: #343434;
+}
+
 a {
     cursor: pointer;
 }

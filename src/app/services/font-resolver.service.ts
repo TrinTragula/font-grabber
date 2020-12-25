@@ -15,9 +15,14 @@ export class FontResolverService {
   private base_url = 'https://cors-anywhere.herokuapp.com/'
   private alreadyDone: string[] = [];
   private resolvedFontsInternal: string[] = [];
+  private stop: boolean = false;
   resolvedFont: Subject<ResolvedFont> = new Subject<ResolvedFont>();
 
   constructor() { }
+
+  stopFetching() {
+    this.stop = true;
+  }
 
   /**
    * Resolves fonts at the provided URL.
@@ -25,6 +30,7 @@ export class FontResolverService {
    * @param url The URL to get fonts from
    */
   async resolve(url: string): Promise<string | null> {
+    this.stop = false;
     this.alreadyDone = [];
     this.resolvedFontsInternal = [];
     await this.extractFonts(url);
@@ -32,21 +38,26 @@ export class FontResolverService {
     return null;
   }
 
-  private async extractFonts(url: string): Promise<void> {
+  private async extractFonts(url: string, depth: number = 0): Promise<any> {
     // TODO:
     // - Gestire path locali
     // - Gestire ricursione massima
     // - Appena trovi un font aggiugnerlo ad un'array osservabile così da far aggiornare subito la UI
     // - Renderlo fire and forget con gestione di race condition nell'aggiunere font all'array
 
+    if (this.stop) return; // Process was stopped
     if (this.alreadyDone.includes(url)) return;
+    if (depth > 3) return; // Don't venture too deep
 
     try {
+      console.log("Fetching: ", url);
+      this.alreadyDone.push(url);
       const response = await fetch(this.base_url + url);
       const text = await response.text();
-      this.alreadyDone.push(url);
+      if (this.stop) return;
 
       let regexResult = null;
+      let promises: Promise<void>[] = [];
       do {
         regexResult = FILES_REGEX.exec(text);
         if (regexResult && regexResult.length >= 3) {
@@ -60,18 +71,21 @@ export class FontResolverService {
               this.tryAddFont(newUrl, extension);
             }
           } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
-            await this.extractFonts(newUrl);
+            promises.push(this.extractFonts(newUrl, depth + 1));
           }
         }
       } while (regexResult);
+
+      return Promise.all(promises);
     } catch {
 
     }
+
     return;
   }
 
   private async tryAddFont(url: string, extension: string) {
-    console.log(url);
+    if (this.stop) return;
     const proxied_url = this.base_url + url;
 
     try {

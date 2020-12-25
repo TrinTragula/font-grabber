@@ -18,7 +18,12 @@ export class FontGrabberComponent implements OnInit {
 
   }
 
+  stopFetching() {
+    this.fontSvc.stopFetching();
+  }
+
   async getFonts() {
+    this.stopFetching();
     this.errorMessage = null;
     this.loading = true;
     this.resolvedFontSvc.clear();
