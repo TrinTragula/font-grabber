@@ -14,7 +14,7 @@ export class FontResolverService {
   private base_url = 'https://cors-anywhere.herokuapp.com/'
   private alreadyDone: string[] = [];
   private resolvedFontsInternal: ResolvedFont[] = [];
-  resolvedFonts: Subject<ResolvedFont[]> = new Subject<ResolvedFont[]>();
+  resolvedFont: Subject<ResolvedFont> = new Subject<ResolvedFont>();
 
   constructor() { }
 
@@ -26,8 +26,6 @@ export class FontResolverService {
   async resolve(url: string): Promise<string | null> {
     this.alreadyDone = [];
     this.resolvedFontsInternal = [];
-    this.resolvedFonts.next(this.resolvedFontsInternal);
-
     await this.extractFonts(url);
     console.log('DONE');
 
@@ -43,7 +41,7 @@ export class FontResolverService {
 
     if (this.alreadyDone.includes(url)) return;
 
-    console.log(url);
+    console.log('Fetching:', url);
 
     try {
       const response = await fetch(this.base_url + url);
@@ -60,14 +58,13 @@ export class FontResolverService {
           if (FONT_EXTENSIONS.includes(extension)) {
             // Don't add it again if it already exists
             if (!this.resolvedFontsInternal.find(f => f.url === url)) {
-              this.resolvedFontsInternal.push(
-                new ResolvedFont(
-                  url,
-                  regexResult[1],
-                  extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot'
-                )
+              var font = new ResolvedFont(
+                url,
+                regexResult[1],
+                extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot'
               );
-              this.resolvedFonts.next(this.resolvedFontsInternal);
+              this.resolvedFontsInternal.push(font);
+              this.resolvedFont.next(font);
             }
           } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
             await this.extractFonts(url);
@@ -75,7 +72,7 @@ export class FontResolverService {
         }
       } while (regexResult);
     } catch {
-
+      console.log("Errore");
     }
     return;
   }

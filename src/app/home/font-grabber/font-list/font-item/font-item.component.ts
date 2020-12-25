@@ -13,7 +13,7 @@ export class FontItemComponent implements OnInit, AfterViewInit {
 
   constructor() { }
 
-  ngOnInit(): Promise<void> {
+  ngOnInit() {
 
   }
 

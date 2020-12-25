@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FontResolverService } from 'src/app/services/font-resolver.service';
+import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
 
 @Component({
@@ -10,11 +11,11 @@ import { ResolvedFont } from 'src/app/shared/ResolvedFont';
 export class FontListComponent implements OnInit {
   fonts: ResolvedFont[] = [];
 
-  constructor(private fontSvc: FontResolverService) { }
+  constructor(private resFontSvc: ResolvedFontsService) { }
 
   ngOnInit(): void {
-    this.fontSvc.resolvedFonts.subscribe((fonts) => {
-      this.fonts = fonts;
-    });
+    this.resFontSvc.fonts.subscribe((newFontsList) => {
+      this.fonts = newFontsList;
+    })
   }
 }
