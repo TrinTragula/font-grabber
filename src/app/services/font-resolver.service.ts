@@ -6,9 +6,11 @@ import { load as openTypeFontLoad } from 'opentype.js';
 
 const FILES_REGEX: RegExp = /(?:https?\:\/\/)?(?:[A-Za-z0-9\-]+\.)*(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
 const GOOGLE_FONTS_REGEX: RegExp = /http(s)?\:\/\/fonts\.googleapis\.com\/css[^"'\(\)]*/gim;
-const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
+const IFRAME_REGEX: RegExp = /<iframe.*src\=['"]+(.*)['"]+.*<\/iframe>/gim;
+const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff', 'woff2']; //, 'eot'];
 const OPENTYPE_SUPPORTED_EXTENSIONS: string[] = ['ttf', 'otf', 'woff'];
-const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js', 'html'];
+const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js'];
+const RELATIVE_URL_REGEX = /^(?:[a-z]+:)?\/\//i;
 
 @Injectable({
   providedIn: 'root'
@@ -52,7 +54,7 @@ export class FontResolverService {
     if (depth > 2) return; // Don't venture too deep
 
     try {
-      console.log("Fetching: ", url);
+      // console.log("Fetching: ", url);
       this.alreadyDone.push(url);
       const response = await fetch(this.base_url + url);
       const text = await response.text();
@@ -65,7 +67,9 @@ export class FontResolverService {
       do {
         regexResult = FILES_REGEX.exec(text);
         if (regexResult && regexResult.length >= 3) {
-          const newUrl = (new URL(regexResult[0], url)).href;
+          const newUrl = this.isURLRelative(regexResult[0])
+            ? (new URL(regexResult[0], url)).href
+            : regexResult[0];
           const extension = regexResult[2].toLowerCase();
 
           if (FONT_EXTENSIONS.includes(extension)) {
@@ -84,10 +88,24 @@ export class FontResolverService {
       do {
         regexResult = GOOGLE_FONTS_REGEX.exec(text);
         if (regexResult) {
-          const newUrl = (new URL(regexResult[0], url)).href;
+          const newUrl = this.isURLRelative(regexResult[0])
+            ? (new URL(regexResult[0], url)).href
+            : regexResult[0];
           promises.push(this.extractFonts(newUrl, depth + 1));
         }
       } while (regexResult);
+
+      //Iframes
+      do {
+        regexResult = IFRAME_REGEX.exec(text);
+        if (regexResult) {
+          const newUrl = this.isURLRelative(regexResult[1])
+            ? (new URL(regexResult[1], url)).href
+            : regexResult[0];
+          promises.push(this.extractFonts(newUrl, depth + 1));
+        }
+
+      } while (regexResult)
 
 
       return Promise.all(promises);
@@ -98,8 +116,16 @@ export class FontResolverService {
     return;
   }
 
+  private isURLRelative(url: string): boolean {
+    return RELATIVE_URL_REGEX.test(url);
+  }
+
   private async tryAddFont(url: string, fallbackName: string, extension: string) {
     if (this.stop) return;
+    if (!url.includes("http")) {
+      url = "http://" + url;
+    }
+    
     const proxied_url = this.base_url + url;
 
     try {
