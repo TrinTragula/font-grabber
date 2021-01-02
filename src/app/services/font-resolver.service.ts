@@ -49,7 +49,7 @@ export class FontResolverService {
    * Gets if a string is a valid URL
    * @param urlStr 
    */
-  private isValidHttpUrl(urlStr: string) {
+  private isValidHttpUrl(urlStr: string): boolean {
     let url: URL;
     try {
       url = new URL(urlStr);
@@ -68,6 +68,10 @@ export class FontResolverService {
   }
 
   private extractFonts(url: string, depth: number = 0): void {
+    if (url && !url.startsWith('http')) {
+      url = `http://${url}`;
+    }
+
     // Check if the starting url is valid
     if (depth == 0 && !this.isValidHttpUrl(url)) {
       this.resolvedFont.error(new Error('Please provide a valide URL'));

@@ -50,7 +50,6 @@
     .nav {
         width: 100%;
     }
-
     .nav>.nav-btn {
         display: inline-block;
         position: absolute;
@@ -78,7 +77,7 @@
         width: 100%;
         background-color: white;
         height: 0px;
-        transition: all 0.3s ease-in;
+        transition: all 0.1s ease-in;
         overflow-y: hidden;
         top: 50px;
         left: 0px;

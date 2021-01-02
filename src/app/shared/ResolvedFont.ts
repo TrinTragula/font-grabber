@@ -1,5 +1,3 @@
-import { Font } from "opentype.js";
-
 export class ResolvedFont {
     constructor(
         public url: string,

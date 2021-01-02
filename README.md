@@ -1,27 +1,13 @@
 # FontGrabber
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.0.5.
+An angular app that lets you save fonts used (or just imported) in web pages.
+As of now, it simply analyzes the static content of the web page and the referenced css or js files used in the provided url.
 
-## Development server
+## Features to add
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+This is a list of features that I'd like to add in the future:
 
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+- [x] Be able to stop searching fonts for a website that is taking too long
+- [ ] Private CORS proxy or a better workaround
+- [ ] Download system fonts in case a website is using a font available through the browser
+- [ ] Better detection of local file (stuff like `../../font.woff`)

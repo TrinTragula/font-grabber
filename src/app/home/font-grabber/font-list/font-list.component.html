@@ -1,7 +1,7 @@
 <div *ngIf="fonts$ | async as fonts">
-    <h2>Found {{fonts.length}} fonts.</h2>
+    <h2>Found {{fonts ? fonts.length : 0}} fonts.</h2>
     <hr>
-    <label for="sampleText">Testo di prova</label>
+    <label for="sampleText">Example text</label>
     <input [(ngModel)]="sampleText" id="sampleText" style="display: block; width: 300px; margin: 10px;">
     <hr>
     <app-font-item *ngFor="let font of fonts" [font]="font" [sampleText]="sampleText"></app-font-item>

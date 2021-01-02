@@ -1,6 +1,6 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
 import { getResolvedFonts } from 'src/app/state/app.selectors';
 

@@ -5,8 +5,8 @@
     <p>
         <b>Extension</b>: {{resolvedFont.extension}}
     </p>
-    <p *ngIf="resolvedFont.family">
-        <b>Family</b>: {{resolvedFont.family}} ({{resolvedFont.subFamily}})
+    <p *ngIf="resolvedFont && resolvedFont.family && resolvedFont.family !== ''">
+        <b>Family</b>: {{resolvedFont | fontFamily}}
     </p>
     <div *ngIf="showSampleText; else fontNotLoaded" [style]="fontStyle()">
         {{sampleText || 'The quick brown fox jumps over the lazy dog'}}

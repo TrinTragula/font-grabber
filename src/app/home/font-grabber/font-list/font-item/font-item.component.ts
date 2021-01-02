@@ -17,9 +17,10 @@ export class FontItemComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
+    // We assign a random name to avoid collision
     this.fontName = this.resolvedFont.name + Math.floor(Math.random() * 100000);
 
-    // console.log(this.resolvedFont.url);
+    // We dinamycally append to the HTML page a style block to dynamically load the font-face
     let style = document.createElement('style');
     style.innerText = `
       @font-face {

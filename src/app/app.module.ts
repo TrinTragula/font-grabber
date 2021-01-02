@@ -17,6 +17,7 @@ import { reducer } from './state/app.reducer';
 import { EffectsModule } from '@ngrx/effects';
 import { AppEffects } from './state/app.effects';
 import { HttpClientModule } from '@angular/common/http';
+import { FontFamilyPipe } from './shared/font-family.pipe';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { HttpClientModule } from '@angular/common/http';
     MenuComponent,
     FontGrabberComponent,
     FontListComponent,
-    FontItemComponent
+    FontItemComponent,
+    FontFamilyPipe
   ],
   imports: [
     BrowserModule,

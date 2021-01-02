@@ -16,7 +16,6 @@ export class FontGrabberComponent implements OnInit {
   errorMessage$!: Observable<string>;
   loading$!: Observable<boolean>;
 
-
   constructor(private store: Store<State>) { }
 
   ngOnInit(): void {
