@@ -17,3 +17,8 @@ export const getResolvedFonts = createSelector(
     featureSelector,
     (state) => state.resolvedFonts
 );
+
+export const getSearchedUrl = createSelector(
+    featureSelector,
+    (state) => state.searchedUrl
+);

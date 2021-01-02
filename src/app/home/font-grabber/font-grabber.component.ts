@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
 import * as Actions from 'src/app/state/app.actions';
 import { State } from 'src/app/state/app.reducer';
-import { getErrorMessage, getLoading } from 'src/app/state/app.selectors';
+import { getErrorMessage, getLoading, getSearchedUrl } from 'src/app/state/app.selectors';
 
 @Component({
   selector: 'app-font-grabber',
@@ -21,6 +22,9 @@ export class FontGrabberComponent implements OnInit {
   ngOnInit(): void {
     this.errorMessage$ = this.store.select(getErrorMessage);
     this.loading$ = this.store.select(getLoading);
+    this.store.select(getSearchedUrl).pipe(take(1)).subscribe(
+      (searchedURL) => this.url = searchedURL
+    );
   }
 
   stopFetching() {

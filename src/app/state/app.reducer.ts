@@ -5,13 +5,15 @@ import * as Actions from "./app.actions";
 export interface State {
     resolvedFonts: ResolvedFont[] | null,
     loading: boolean,
-    errorMessage: string
+    errorMessage: string,
+    searchedUrl: string
 }
 
 const initialState: State = {
     resolvedFonts: null,
     loading: false,
-    errorMessage: ''
+    errorMessage: '',
+    searchedUrl: ''
 };
 
 const fontReducer = createReducer<State>(
@@ -22,11 +24,12 @@ const fontReducer = createReducer<State>(
             resolvedFonts: null
         };
     }),
-    on(Actions.loadFontsFromUrl, (state): State => {
+    on(Actions.loadFontsFromUrl, (state, action): State => {
         return {
             ...state,
             errorMessage: '',
-            loading: true
+            loading: true,
+            searchedUrl: action.url
         }
     }),
     on(Actions.fontFound, (state, action): State => {
