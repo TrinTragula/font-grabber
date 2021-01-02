@@ -153,8 +153,11 @@ export class FontResolverService {
   }
 
   private async tryAddFont(url: string, fallbackName: string, extension: string) {
-    if (!url.includes("http")) {
-      url = "http://" + url;
+    if (!url.includes('http')) {
+      url = 'https://' + url;
+    }
+    if (url.includes('http') && !url.includes('https')) {
+      url = url.replace('http', 'https');
     }
 
     const proxied_url = this.base_url + url;
