@@ -1,5 +1,5 @@
-<div>
-    <h2 *ngIf="fonts">Found {{fonts?.length}} fonts.</h2>
+<div *ngIf="fonts$ | async as fonts">
+    <h2>Found {{fonts.length}} fonts.</h2>
     <hr>
     <label for="sampleText">Testo di prova</label>
     <input [(ngModel)]="sampleText" id="sampleText" style="display: block; width: 300px; margin: 10px;">

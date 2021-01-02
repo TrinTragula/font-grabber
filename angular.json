@@ -125,5 +125,8 @@
       }
     }
   },
-  "defaultProject": "font-grabber"
+  "defaultProject": "font-grabber",
+  "cli": {
+    "defaultCollection": "@ngrx/schematics"
+  }
 }

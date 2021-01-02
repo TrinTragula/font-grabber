@@ -19,7 +19,7 @@ export class FontItemComponent implements OnInit {
   ngOnInit() {
     this.fontName = this.resolvedFont.name + Math.floor(Math.random() * 100000);
 
-    console.log(this.resolvedFont.url);
+    // console.log(this.resolvedFont.url);
     let style = document.createElement('style');
     style.innerText = `
       @font-face {

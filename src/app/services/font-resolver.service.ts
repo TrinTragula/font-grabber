@@ -1,8 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { EMPTY, Observable, Subject, Subscription } from 'rxjs';
 import { ResolvedFont } from '../shared/ResolvedFont';
+import { HttpClient } from '@angular/common/http'
 
 import { load as openTypeFontLoad } from 'opentype.js';
+import { catchError, take } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { stopSearching } from '../state/app.actions';
 
 const FILES_REGEX: RegExp = /(?:https?\:\/\/)?(?:[A-Za-z0-9\-]+\.)*(?:[A-Za-z0-9\-\_\.]+\/)+([A-Za-z0-9\-\_\.]+)\.(\w+)/gim;
 const GOOGLE_FONTS_REGEX: RegExp = /http(s)?\:\/\/fonts\.googleapis\.com\/css[^"'\(\)]*/gim;
@@ -19,99 +23,76 @@ export class FontResolverService {
   private base_url = 'https://api.allorigins.win/raw?url=' // 'https://cors-anywhere.herokuapp.com/'
   private alreadyDone: string[] = [];
   private resolvedFontsInternal: string[] = [];
-  private stop: boolean = false;
-  resolvedFont: Subject<ResolvedFont> = new Subject<ResolvedFont>();
+  private resolvedFont: Subject<ResolvedFont> = new Subject<ResolvedFont>();
+  private requestCounter = 0;
 
-  constructor() { }
-
-  stopFetching() {
-    this.stop = true;
-  }
+  constructor(private http: HttpClient, private store: Store) { }
 
   /**
    * Resolves fonts at the provided URL.
    * Returns a string with an error message, if present
    * @param url The URL to get fonts from
    */
-  async resolve(url: string): Promise<string | null> {
-    this.stop = false;
+  resolve(url: string): Observable<ResolvedFont> {
     this.alreadyDone = [];
     this.resolvedFontsInternal = [];
-    await this.extractFonts(url);
+    this.requestCounter = 0;
+    if (this.resolvedFont) this.resolvedFont.complete();
+    this.resolvedFont = new Subject<ResolvedFont>();
 
-    return null;
+    this.extractFonts(url);
+
+    return this.resolvedFont;
   }
 
-  private async extractFonts(url: string, depth: number = 0): Promise<any> {
-    // TODO:
-    // - Gestire path locali
-    // - Gestire ricursione massima
-    // - Appena trovi un font aggiugnerlo ad un'array osservabile così da far aggiornare subito la UI
-    // - Renderlo fire and forget con gestione di race condition nell'aggiunere font all'array
+  /**
+   * Gets if a string is a valid URL
+   * @param urlStr 
+   */
+  private isValidHttpUrl(urlStr: string) {
+    let url: URL;
+    try {
+      url = new URL(urlStr);
+    }
+    catch {
+      return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
 
-    if (this.stop) return; // Process was stopped
+  private decrementIndex() {
+    this.requestCounter = Math.max(this.requestCounter - 1, 0);
+    if (this.requestCounter === 0) {
+      this.store.dispatch(stopSearching());
+    }
+  }
+
+  private extractFonts(url: string, depth: number = 0): void {
+    // Check if the starting url is valid
+    if (depth == 0 && !this.isValidHttpUrl(url)) {
+      this.resolvedFont.error(new Error('Please provide a valide URL'));
+      return;
+    }
+
     if (this.alreadyDone.includes(url)) return;
     if (depth > 2) return; // Don't venture too deep
 
-    try {
-      // console.log("Fetching: ", url);
-      this.alreadyDone.push(url);
-      const response = await fetch(this.base_url + url);
-      const text = await response.text();
-      if (this.stop) return;
-
-      let regexResult = null;
-      let promises: Promise<void>[] = [];
-
-      // Files
-      do {
-        regexResult = FILES_REGEX.exec(text);
-        if (regexResult && regexResult.length >= 3) {
-          const newUrl = this.isURLRelative(regexResult[0])
-            ? (new URL(regexResult[0], url)).href
-            : regexResult[0];
-          const extension = regexResult[2].toLowerCase();
-
-          if (FONT_EXTENSIONS.includes(extension)) {
-            // Don't add it again if it already exists
-            if (!this.resolvedFontsInternal.find(u => u === newUrl)) {
-              this.resolvedFontsInternal.push(newUrl);
-              this.tryAddFont(newUrl, regexResult[1], extension);
-            }
-          } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
-            promises.push(this.extractFonts(newUrl, depth + 1));
-          }
-        }
-      } while (regexResult);
-
-      // Google fonts
-      do {
-        regexResult = GOOGLE_FONTS_REGEX.exec(text);
-        if (regexResult) {
-          const newUrl = this.isURLRelative(regexResult[0])
-            ? (new URL(regexResult[0], url)).href
-            : regexResult[0];
-          promises.push(this.extractFonts(newUrl, depth + 1));
-        }
-      } while (regexResult);
-
-      //Iframes
-      do {
-        regexResult = IFRAME_REGEX.exec(text);
-        if (regexResult) {
-          const newUrl = this.isURLRelative(regexResult[1])
-            ? (new URL(regexResult[1], url)).href
-            : regexResult[0];
-          promises.push(this.extractFonts(newUrl, depth + 1));
-        }
-
-      } while (regexResult)
-
-
-      return Promise.all(promises);
-    } catch {
-
-    }
+    // console.log("Fetching: ", url);
+    this.requestCounter++;
+    this.alreadyDone.push(url);
+    this.http.get(this.base_url + url, { responseType: 'text' })
+      .pipe(
+        take(1),
+        catchError(() => {
+          this.decrementIndex();
+          console.log('Error while fetching: ' + url);
+          return EMPTY;
+        }),
+      )
+      .subscribe(text => {
+        this.getFontsFromHTML(url, text, depth);
+        this.decrementIndex();
+      });
 
     return;
   }
@@ -120,12 +101,58 @@ export class FontResolverService {
     return RELATIVE_URL_REGEX.test(url);
   }
 
+  private getFontsFromHTML(url: string, text: string, depth: number) {
+    let regexResult = null;
+
+    // Files
+    do {
+      regexResult = FILES_REGEX.exec(text);
+      if (regexResult && regexResult.length >= 3) {
+        const newUrl = this.isURLRelative(regexResult[0])
+          ? (new URL(regexResult[0], url)).href
+          : regexResult[0];
+        const extension = regexResult[2].toLowerCase();
+
+        if (FONT_EXTENSIONS.includes(extension)) {
+          // Don't add it again if it already exists
+          if (!this.resolvedFontsInternal.find(u => u === newUrl)) {
+            this.resolvedFontsInternal.push(newUrl);
+            this.tryAddFont(newUrl, regexResult[1], extension);
+          }
+        } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
+          this.extractFonts(newUrl, depth + 1);
+        }
+      }
+    } while (regexResult);
+
+    // Google fonts
+    do {
+      regexResult = GOOGLE_FONTS_REGEX.exec(text);
+      if (regexResult) {
+        const newUrl = this.isURLRelative(regexResult[0])
+          ? (new URL(regexResult[0], url)).href
+          : regexResult[0];
+        this.extractFonts(newUrl, depth + 1);
+      }
+    } while (regexResult);
+
+    //Iframes
+    do {
+      regexResult = IFRAME_REGEX.exec(text);
+      if (regexResult) {
+        const newUrl = this.isURLRelative(regexResult[1])
+          ? (new URL(regexResult[1], url)).href
+          : regexResult[0];
+        this.extractFonts(newUrl, depth + 1);
+      }
+    } while (regexResult);
+  }
+
   private async tryAddFont(url: string, fallbackName: string, extension: string) {
-    if (this.stop) return;
     if (!url.includes("http")) {
       url = "http://" + url;
     }
-    
+
     const proxied_url = this.base_url + url;
 
     try {
@@ -137,7 +164,6 @@ export class FontResolverService {
             url,
             font.names.fullName ? font.names.fullName["en"] : fallbackName,
             extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot',
-            font,
             font.names.fontFamily ? font.names.fontFamily["en"] : null,
             font.names.fontSubfamily ? font.names.fontSubfamily["en"] : null,
             font.names.version ? font.names.version["en"] : null,
@@ -152,7 +178,6 @@ export class FontResolverService {
           url,
           fallbackName,
           extension as 'ttf' | 'otf' | 'woff' | 'woff2' | 'eot',
-          null,
           null,
           null,
           null,

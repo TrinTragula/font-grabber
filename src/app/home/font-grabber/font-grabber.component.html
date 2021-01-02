@@ -1,7 +1,7 @@
 <input type="url" name="url" id="url" placeholder="https://example.com" size="30" required [(ngModel)]="url">
 <button (click)="getFonts()">Get fonts</button>
-<h3>{{errorMessage}}</h3>
-<div *ngIf="loading">
+<h3>{{errorMessage$ | async}}</h3>
+<div *ngIf="loading$ | async">
     <h3>Loading...</h3>
     <button (click)="stopFetching()">Stop</button>
 </div>

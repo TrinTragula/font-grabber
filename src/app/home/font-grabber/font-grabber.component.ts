@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FontResolverService } from 'src/app/services/font-resolver.service';
-import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import * as Actions from 'src/app/state/app.actions';
+import { State } from 'src/app/state/app.reducer';
+import { getErrorMessage, getLoading } from 'src/app/state/app.selectors';
 
 @Component({
   selector: 'app-font-grabber',
@@ -8,47 +11,28 @@ import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
   styleUrls: ['./font-grabber.component.css']
 })
 export class FontGrabberComponent implements OnInit {
-  url: string | null = null;
-  errorMessage: string | null = null;
-  loading: boolean = false;
+  url: string = '';
+  errorMessage$!: Observable<string>;
+  loading$!: Observable<boolean>;
 
-  constructor(private fontSvc: FontResolverService, private resolvedFontSvc: ResolvedFontsService) { }
+
+  constructor(private store: Store<State>) { }
 
   ngOnInit(): void {
-
+    this.errorMessage$ = this.store.select(getErrorMessage);
+    this.loading$ = this.store.select(getLoading);
   }
 
   stopFetching() {
-    this.fontSvc.stopFetching();
+    this.store.dispatch(Actions.stopSearching());
   }
 
   async getFonts() {
     this.stopFetching();
-    this.errorMessage = null;
-    this.loading = true;
-    this.resolvedFontSvc.clear();
 
-    if (this.url && this.isValidHttpUrl(this.url)) {
-      this.errorMessage = await this.fontSvc.resolve(this.url);
-    } else {
-      this.errorMessage = 'Please provide a valid URL';
-    }
-
-    this.loading = false;
-  }
-
-  /**
-   * Gets if a string is a valid URL
-   * @param urlStr 
-   */
-  private isValidHttpUrl(urlStr: string) {
-    let url: URL;
-    try {
-      url = new URL(urlStr);
-    }
-    catch {
-      return false;
-    }
-    return url.protocol === "http:" || url.protocol === "https:";
+    this.store.dispatch(Actions.clearResolvedFonts());
+    this.store.dispatch(Actions.loadFontsFromUrl({
+      url: this.url
+    }));
   }
 }

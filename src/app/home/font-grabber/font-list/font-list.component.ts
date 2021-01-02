@@ -1,28 +1,21 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { ResolvedFontsService } from 'src/app/services/resolved-fonts.service';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
 import { ResolvedFont } from 'src/app/shared/ResolvedFont';
+import { getResolvedFonts } from 'src/app/state/app.selectors';
 
 @Component({
   selector: 'app-font-list',
   templateUrl: './font-list.component.html',
   styleUrls: ['./font-list.component.css']
 })
-export class FontListComponent implements OnInit, OnDestroy {
+export class FontListComponent implements OnInit {
   @Input() sampleText: string = 'The quick brown fox jumps over the lazy dog';
-  fonts: ResolvedFont[] | null = null;
-  
-  private subscription!: Subscription;
+  fonts$!: Observable<ResolvedFont[] | null>;
 
-  constructor(private resFontSvc: ResolvedFontsService) { }
+  constructor(private store: Store) { }
 
   ngOnInit(): void {
-    this.subscription = this.resFontSvc.fonts.subscribe((newFontsList) => {
-      this.fonts = newFontsList;
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+    this.fonts$ = this.store.select(getResolvedFonts);
   }
 }
