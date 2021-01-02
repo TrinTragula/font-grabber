@@ -8,6 +8,7 @@
     background-color: white;
     position: relative;
     margin: auto;
+    border-bottom: 3px solid #343434;
 }
 
 .nav>.nav-header {
@@ -19,6 +20,12 @@
     font-size: 22px;
     color: #343434;
     padding: 10px 10px 10px 10px;
+    font-weight: bold;
+}
+
+.nav>.nav-header>.nav-title>a {
+    color: #343434;
+    text-decoration: none;
 }
 
 .nav>.nav-btn {
@@ -35,11 +42,16 @@
     display: inline-block;
     padding: 15px;
     text-decoration: none;
-    color: #373737;
+    color: #343434;
+    width: 70px;
 }
 
 .nav>.nav-links>a:hover {
-    background-color: rgba(0, 0, 0, 0.3);
+    font-weight: bold;
+}
+
+.nav>.nav-links>a.active {
+    font-weight: bold;
 }
 
 .nav>#nav-check {
@@ -84,7 +96,9 @@
     }
     .nav>.nav-links>a {
         display: block;
-        width: 100%;
+        border-bottom: 1px solid #343434;
+        width: 50vw;
+        margin-left: 10px;
     }
     .nav>#nav-check:not(:checked)~.nav-links {
         height: 0px;

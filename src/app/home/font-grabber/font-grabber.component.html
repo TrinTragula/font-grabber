@@ -1,5 +1,13 @@
-<input type="url" name="url" id="url" placeholder="https://example.com" size="30" required [(ngModel)]="url">
-<button (click)="getFonts()">Get fonts</button>
+<h1>
+    Download any font you want!
+</h1>
+<div class="fine-print">
+    <small>(If you legally own it)</small>
+</div>
+<div class="search-box">
+    <input type="url" name="url" id="url" placeholder="https://example.com" size="30" required [(ngModel)]="url">
+    <button (click)="getFonts()">Get fonts</button>
+</div>
 <h3>{{errorMessage$ | async}}</h3>
 <div *ngIf="loading$ | async">
     <h3>Loading...</h3>
