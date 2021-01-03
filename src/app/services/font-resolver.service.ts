@@ -14,7 +14,7 @@ const IFRAME_REGEX: RegExp = /<iframe.*src\=['"]+(.*)['"]+.*<\/iframe>/gim;
 const FONT_EXTENSIONS: string[] = ['ttf', 'otf', 'woff', 'woff2']; //, 'eot'];
 const OPENTYPE_SUPPORTED_EXTENSIONS: string[] = ['ttf', 'otf', 'woff'];
 const INTERESTING_FILES_EXTENSIONS: string[] = ['css', 'js'];
-const RELATIVE_URL_REGEX = /^(?:[a-z]+:)?\/\//i;
+const RELATIVE_URL_REGEX = /^[a-z]+(?:\.[a-z]+)+\//i;
 
 @Injectable({
   providedIn: 'root'
@@ -67,7 +67,7 @@ export class FontResolverService {
     }
   }
 
-  private extractFonts(url: string, depth: number = 0): void {
+  private async extractFonts(url: string, baseUrl: string = '', depth: number = 0) {
     if (url && !url.startsWith('http')) {
       url = `http://${url}`;
     }
@@ -94,7 +94,7 @@ export class FontResolverService {
         }),
       )
       .subscribe(text => {
-        this.getFontsFromHTML(url, text, depth);
+        this.getFontsFromHTML(url, text, depth, baseUrl);
         this.decrementIndex();
       });
 
@@ -102,10 +102,12 @@ export class FontResolverService {
   }
 
   private isURLRelative(url: string): boolean {
-    return RELATIVE_URL_REGEX.test(url);
+    if (url.startsWith('http') || url.startsWith('www')) return false;
+    if (url.startsWith('.')) return true;
+    return !RELATIVE_URL_REGEX.test(url);
   }
 
-  private getFontsFromHTML(url: string, text: string, depth: number) {
+  private getFontsFromHTML(url: string, text: string, depth: number, baseUrl: string) {
     let regexResult = null;
 
     // Files
@@ -121,10 +123,10 @@ export class FontResolverService {
           // Don't add it again if it already exists
           if (!this.resolvedFontsInternal.find(u => u === newUrl)) {
             this.resolvedFontsInternal.push(newUrl);
-            this.tryAddFont(newUrl, regexResult[1], extension);
+            this.tryAddFont(newUrl, regexResult[1], extension, baseUrl);
           }
         } else if (INTERESTING_FILES_EXTENSIONS.includes(extension)) {
-          this.extractFonts(newUrl, depth + 1);
+          this.extractFonts(newUrl, url, depth + 1);
         }
       }
     } while (regexResult);
@@ -136,7 +138,8 @@ export class FontResolverService {
         const newUrl = this.isURLRelative(regexResult[0])
           ? (new URL(regexResult[0], url)).href
           : regexResult[0];
-        this.extractFonts(newUrl, depth + 1);
+        this.extractFonts(newUrl, url, depth + 1);
+        console.log(text, newUrl, url);
       }
     } while (regexResult);
 
@@ -147,12 +150,16 @@ export class FontResolverService {
         const newUrl = this.isURLRelative(regexResult[1])
           ? (new URL(regexResult[1], url)).href
           : regexResult[0];
-        this.extractFonts(newUrl, depth + 1);
+        this.extractFonts(newUrl, url, depth + 1);
       }
     } while (regexResult);
   }
 
-  private async tryAddFont(url: string, fallbackName: string, extension: string) {
+  private async tryAddFont(url: string, fallbackName: string, extension: string, baseUrl: string) {
+    url = this.isURLRelative(url)
+      ? (new URL(baseUrl, url)).href
+      : url;
+
     if (!url.includes('http')) {
       url = 'https://' + url;
     }
