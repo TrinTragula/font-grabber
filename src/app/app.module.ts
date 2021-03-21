@@ -18,6 +18,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { AppEffects } from './state/app.effects';
 import { HttpClientModule } from '@angular/common/http';
 import { FontFamilyPipe } from './shared/font-family.pipe';
+import { AboutComponent } from './about/about.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { FontFamilyPipe } from './shared/font-family.pipe';
     FontGrabberComponent,
     FontListComponent,
     FontItemComponent,
-    FontFamilyPipe
+    FontFamilyPipe,
+    AboutComponent
   ],
   imports: [
     BrowserModule,
