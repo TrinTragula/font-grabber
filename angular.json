@@ -79,6 +79,10 @@
           "options": {
             "browserTarget": "font-grabber:build"
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy",
+          "options": {}
         }
       }
     }
